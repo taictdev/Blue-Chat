@@ -117,13 +117,14 @@ public class VideoCallRTCEventHandler : IRtcEngineEventHandler
     {
         Debug.Log($"User {uid} joined the channel {connection.channelId}");
         var node = JoinChannelVideo.MakeVideoView(uid, manager.GetChannelName());
-        node.transform.SetParent(manager.RemoteVideoSurface.transform, false);
+        manager.RemoteVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
 
     public override void OnUserOffline(RtcConnection connection, uint uid, USER_OFFLINE_REASON_TYPE reason)
     {
         Debug.Log($"User {uid} left the channel {connection.channelId} (reason: {reason})");
         JoinChannelVideo.DestroyVideoView(uid);
+        manager.RemoteVideoSurface.texture = null;
     }
 }
 #endregion
