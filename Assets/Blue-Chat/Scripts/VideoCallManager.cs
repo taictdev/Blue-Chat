@@ -66,7 +66,7 @@ public class VideoCallManager : MonoBehaviour
             areaCode = AREA_CODE.AREA_CODE_AS,
 
         };
-         var result = RtcEngineEx.Initialize(context);
+        var result = RtcEngineEx.Initialize(context);
         Debug.Log("Initialize result : " + result);
 
         VideoEncoderConfiguration config = new VideoEncoderConfiguration();
@@ -93,6 +93,26 @@ public class VideoCallManager : MonoBehaviour
         options.publishCameraTrack.SetValue(true);
         options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
         RtcEngineEx.JoinChannelEx("", connection, options);
+        var node = JoinChannelVideo.MakeVideoView(0, channelName);
+        LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
+    }
+
+    private void Preview()
+    {
+        channelName = channelInputField.text;
+        connection = new RtcConnection
+        {
+            channelId = channelName,
+            localUid = 0 // Let Agora assign a UID
+        };
+
+        ChannelMediaOptions options = new ChannelMediaOptions();
+        options.autoSubscribeAudio.SetValue(true);
+        options.autoSubscribeVideo.SetValue(true);
+        options.publishMicrophoneTrack.SetValue(true); //make sure publish once time to avoid lag, low performance
+        options.publishCameraTrack.SetValue(true);
+        options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+        RtcEngineEx.StartPreview();
         var node = JoinChannelVideo.MakeVideoView(0, channelName);
         LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
