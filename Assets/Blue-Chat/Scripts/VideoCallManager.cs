@@ -111,6 +111,8 @@ public class VideoCallRTCEventHandler : IRtcEngineEventHandler
     public override void OnJoinChannelSuccess(RtcConnection connection, int elapsed)
     {
         Debug.Log($"Joined channel {connection.channelId} with UID {connection.localUid}");
+         var node = JoinChannelVideo.MakeVideoView(0, manager.GetChannelName());
+        manager.LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
 
     public override void OnUserJoined(RtcConnection connection, uint uid, int elapsed)
