@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 209484305}
   - component: {fileID: 209484304}
   m_Layer: 5
-  m_Name: Left
+  m_Name: LocalView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -411,6 +411,8 @@ MonoBehaviour:
   channelInputField: {fileID: 1425445541}
   joinButton: {fileID: 1903768074}
   leaveButton: {fileID: 475714487}
+  localVideoSurface: {fileID: 209484304}
+  remoteVideoSurface: {fileID: 909861595}
 --- !u!1 &475714485
 GameObject:
   m_ObjectHideFlags: 0
@@ -1002,7 +1004,7 @@ GameObject:
   - component: {fileID: 909861596}
   - component: {fileID: 909861595}
   m_Layer: 5
-  m_Name: Right
+  m_Name: RemoteView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

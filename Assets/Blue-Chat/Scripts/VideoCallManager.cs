@@ -12,14 +12,14 @@ public class VideoCallManager : MonoBehaviour
     [SerializeField] private string channelName;
     [SerializeField] private TMP_InputField channelInputField;
     [SerializeField] private Button joinButton, leaveButton;
+    [SerializeField] private RawImage localVideoSurface;
+    [SerializeField] private RawImage remoteVideoSurface;
     #endregion
 
     #region PRIVATE FIELDS
     private IRtcEngineEx RtcEngineEx;
     private RtcConnection connection;
     private VideoCallRTCEventHandler rtcEventHandler;
-    private RawImage localVideoSurface;
-    private RawImage remoteVideoSurface;
     #endregion
 
     #region PUBLIC PROPERTIES
