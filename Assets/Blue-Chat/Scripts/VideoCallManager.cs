@@ -41,9 +41,9 @@ public class VideoCallManager : MonoBehaviour
         leaveButton.onClick.RemoveListener(LeaveChannel);
     }
 
-
     void Start()
     {
+        channelInputField.text = channelName;
         InitAgoraEngine();
     }
     #endregion
