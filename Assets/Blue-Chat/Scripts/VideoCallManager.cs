@@ -12,6 +12,8 @@ public class VideoCallManager : MonoBehaviour
     [SerializeField] private string channelName;
     [SerializeField] private TMP_InputField channelInputField;
     [SerializeField] private Button joinButton, leaveButton;
+    [SerializeField] private Button startPreviewButton, stopPreviewButton;
+    [SerializeField] private Button startPublishButton, stopPublishButton;
     [SerializeField] private RawImage localVideoSurface;
     [SerializeField] private RawImage remoteVideoSurface;
     #endregion
@@ -33,12 +35,20 @@ public class VideoCallManager : MonoBehaviour
     {
         joinButton.onClick.AddListener(JoinChannel);
         leaveButton.onClick.AddListener(LeaveChannel);
+        startPreviewButton.onClick.AddListener(StartPreview);
+        stopPreviewButton.onClick.AddListener(StopPreview);
+        startPublishButton.onClick.AddListener(StartPublish);
+        stopPublishButton.onClick.AddListener(StopPublish);
     }
 
     void OnDestroy()
     {
         joinButton.onClick.RemoveListener(JoinChannel);
         leaveButton.onClick.RemoveListener(LeaveChannel);
+        startPreviewButton.onClick.RemoveListener(StartPreview);
+        stopPreviewButton.onClick.RemoveListener(StopPreview);
+        startPublishButton.onClick.RemoveListener(StartPublish);
+        stopPublishButton.onClick.RemoveListener(StopPublish);
     }
 
     void Start()
@@ -48,7 +58,14 @@ public class VideoCallManager : MonoBehaviour
     }
     #endregion
 
-    #region PUBLIC METHODS
+    #region PUBLIC METHODS  
+    public void OnJoinChannelSuccess()
+    {
+    }
+
+    public void OnLeaveChannel()
+    {
+    }
     #endregion
 
     #region PRIVATE METHODS
@@ -68,7 +85,6 @@ public class VideoCallManager : MonoBehaviour
         };
         var result = RtcEngineEx.Initialize(context);
         Debug.Log("Initialize result : " + result);
-
         VideoEncoderConfiguration config = new VideoEncoderConfiguration();
         config.dimensions = new VideoDimensions(640, 360);
         config.frameRate = 15;
@@ -89,37 +105,47 @@ public class VideoCallManager : MonoBehaviour
         ChannelMediaOptions options = new ChannelMediaOptions();
         options.autoSubscribeAudio.SetValue(true);
         options.autoSubscribeVideo.SetValue(true);
-        options.publishMicrophoneTrack.SetValue(true); //make sure publish once time to avoid lag, low performance
-        options.publishCameraTrack.SetValue(true);
-        options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+        options.publishMicrophoneTrack.SetValue(false);
+        options.publishCameraTrack.SetValue(false);
         RtcEngineEx.JoinChannelEx("", connection, options);
         var node = JoinChannelVideo.MakeVideoView(0, channelName);
         LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
-
-    private void Preview()
+    private void LeaveChannel()
     {
-        channelName = channelInputField.text;
-        connection = new RtcConnection
-        {
-            channelId = channelName,
-            localUid = 0 // Let Agora assign a UID
-        };
+        RtcEngineEx.LeaveChannelEx(connection);
+    }
 
-        ChannelMediaOptions options = new ChannelMediaOptions();
-        options.autoSubscribeAudio.SetValue(true);
-        options.autoSubscribeVideo.SetValue(true);
-        options.publishMicrophoneTrack.SetValue(true); //make sure publish once time to avoid lag, low performance
-        options.publishCameraTrack.SetValue(true);
-        options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+    private void StartPreview()
+    {
         RtcEngineEx.StartPreview();
         var node = JoinChannelVideo.MakeVideoView(0, channelName);
         LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
 
-    private void LeaveChannel()
+    private void StopPreview()
     {
-        RtcEngineEx.LeaveChannelEx(connection);
+        JoinChannelVideo.DestroyVideoView(0);
+        RtcEngineEx.StopPreview();
+    }
+
+    private void StartPublish()
+    {
+        var options = new ChannelMediaOptions();
+        options.publishMicrophoneTrack.SetValue(true);
+        options.publishCameraTrack.SetValue(true);
+        options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+        var nRet = RtcEngineEx.UpdateChannelMediaOptions(options);
+        Debug.Log("UpdateChannelMediaOptions: " + nRet);
+    }
+
+    private void StopPublish()
+    {
+        var options = new ChannelMediaOptions();
+        options.publishMicrophoneTrack.SetValue(false);
+        options.publishCameraTrack.SetValue(false);
+        var nRet = RtcEngineEx.UpdateChannelMediaOptions(options);
+        Debug.Log("UpdateChannelMediaOptions: " + nRet);
     }
     #endregion
 }
@@ -133,9 +159,15 @@ public class VideoCallRTCEventHandler : IRtcEngineEventHandler
         this.manager = manager;
     }
 
+    public override void OnActiveSpeaker(RtcConnection connection, uint uid)
+    {
+        base.OnActiveSpeaker(connection, uid);
+    }
+
     public override void OnJoinChannelSuccess(RtcConnection connection, int elapsed)
     {
         Debug.Log($"Joined channel {connection.channelId} with UID {connection.localUid}");
+        manager.OnJoinChannelSuccess();
     }
 
     public override void OnUserJoined(RtcConnection connection, uint uid, int elapsed)
@@ -150,6 +182,14 @@ public class VideoCallRTCEventHandler : IRtcEngineEventHandler
         Debug.Log($"User {uid} left the channel {connection.channelId} (reason: {reason})");
         JoinChannelVideo.DestroyVideoView(uid);
         manager.RemoteVideoSurface.texture = null;
+    }
+
+    public override void OnLeaveChannel(RtcConnection connection, RtcStats stats)
+    {
+        Debug.Log($"Left channel {connection.channelId}");
+        JoinChannelVideo.DestroyVideoView(0);
+        manager.LocalVideoSurface.texture = null;
+        manager.OnLeaveChannel();
     }
 }
 #endregion
