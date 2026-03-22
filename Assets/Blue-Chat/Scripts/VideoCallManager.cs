@@ -57,6 +57,7 @@ public class VideoCallManager : MonoBehaviour
         RtcEngineEx = RtcEngine.CreateAgoraRtcEngineEx();
         rtcEventHandler = new VideoCallRTCEventHandler(this);
         RtcEngineEx.InitEventHandler(rtcEventHandler);
+
         RtcEngineContext context = new RtcEngineContext
         {
             appId = appId,
@@ -65,10 +66,15 @@ public class VideoCallManager : MonoBehaviour
             areaCode = AREA_CODE.AREA_CODE_AS,
 
         };
-        RtcEngineEx.Initialize(context);
+         var result = RtcEngineEx.Initialize(context);
+        Debug.Log("Initialize result : " + result);
+
+        VideoEncoderConfiguration config = new VideoEncoderConfiguration();
+        config.dimensions = new VideoDimensions(640, 360);
+        config.frameRate = 15;
+        config.bitrate = 0;
+        RtcEngineEx.SetVideoEncoderConfiguration(config);
         RtcEngineEx.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
-        RtcEngineEx.EnableAudio();
-        RtcEngineEx.EnableVideo();
     }
 
     private void JoinChannel()
@@ -86,10 +92,9 @@ public class VideoCallManager : MonoBehaviour
         options.publishMicrophoneTrack.SetValue(true); //make sure publish once time to avoid lag, low performance
         options.publishCameraTrack.SetValue(true);
         options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
-
         RtcEngineEx.JoinChannelEx("", connection, options);
-        var node = JoinChannelVideo.MakeVideoView(0);
-        node.transform.SetParent(LocalVideoSurface.transform, false);
+        var node = JoinChannelVideo.MakeVideoView(0, channelName);
+        LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
 
     private void LeaveChannel()
@@ -111,8 +116,6 @@ public class VideoCallRTCEventHandler : IRtcEngineEventHandler
     public override void OnJoinChannelSuccess(RtcConnection connection, int elapsed)
     {
         Debug.Log($"Joined channel {connection.channelId} with UID {connection.localUid}");
-         var node = JoinChannelVideo.MakeVideoView(0, manager.GetChannelName());
-        manager.LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
 
     public override void OnUserJoined(RtcConnection connection, uint uid, int elapsed)

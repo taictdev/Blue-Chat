@@ -115,6 +115,10 @@ namespace Agora_RTC_Plugin.API_Example.Examples.Basic.JoinChannelVideo
             context.channelProfile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING;
             context.audioScenario = AUDIO_SCENARIO_TYPE.AUDIO_SCENARIO_DEFAULT;
             context.areaCode = areaCode;
+            if(RtcEngine == null)
+            {
+                RtcEngine = Agora.Rtc.RtcEngine.CreateAgoraRtcEngine();
+            }
             var result = RtcEngine.Initialize(context);
             this.Log.UpdateLog("Initialize result : " + result);
 

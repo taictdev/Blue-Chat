@@ -406,7 +406,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09179544c1f8c7c4090dad79f12b9748, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  appId: 629d9b93332f4837a16c2b321cf459e0
+  appId: 002529ad02f64c7a8ca08e322e9e1c5b
   channelName: Blue-Chat
   channelInputField: {fileID: 1425445541}
   joinButton: {fileID: 1903768074}
@@ -1077,7 +1077,7 @@ GameObject:
   - component: {fileID: 1213114794}
   - component: {fileID: 1213114793}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: VideoCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
