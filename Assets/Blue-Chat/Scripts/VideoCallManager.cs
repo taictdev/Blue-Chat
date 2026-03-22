@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Agora.Rtc;
 using Agora_RTC_Plugin.API_Example.Examples.Basic.JoinChannelVideo;
 using TMPro;
@@ -19,9 +20,10 @@ public class VideoCallManager : MonoBehaviour
     #endregion
 
     #region PRIVATE FIELDS
-    private IRtcEngineEx RtcEngineEx;
+    private IRtcEngineEx RtcEngine;
     private RtcConnection connection;
     private VideoCallRTCEventHandler rtcEventHandler;
+    private ChannelMediaOptions options;
     #endregion
 
     #region PUBLIC PROPERTIES
@@ -71,54 +73,51 @@ public class VideoCallManager : MonoBehaviour
     #region PRIVATE METHODS
     private void InitAgoraEngine()
     {
-        RtcEngineEx = RtcEngine.CreateAgoraRtcEngineEx();
-        rtcEventHandler = new VideoCallRTCEventHandler(this);
-        RtcEngineEx.InitEventHandler(rtcEventHandler);
+        RtcEngineContext context = new RtcEngineContext();
+        context.appId = appId;
+        context.channelProfile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING;
+        context.audioScenario = AUDIO_SCENARIO_TYPE.AUDIO_SCENARIO_DEFAULT;
+        RtcEngine = Agora.Rtc.RtcEngine.CreateAgoraRtcEngineEx();
 
-        RtcEngineContext context = new RtcEngineContext
-        {
-            appId = appId,
-            channelProfile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING,
-            audioScenario = AUDIO_SCENARIO_TYPE.AUDIO_SCENARIO_DEFAULT,
-            areaCode = AREA_CODE.AREA_CODE_AS,
-
-        };
-        var result = RtcEngineEx.Initialize(context);
+        var result = RtcEngine.Initialize(context);
         Debug.Log("Initialize result : " + result);
+        Debug.Log("App Id: " + appId);
+
+        RtcEngine.InitEventHandler(new VideoCallRTCEventHandler(this));
+        RtcEngine.EnableAudio();
+        RtcEngine.EnableVideo();
+
         VideoEncoderConfiguration config = new VideoEncoderConfiguration();
         config.dimensions = new VideoDimensions(640, 360);
         config.frameRate = 15;
         config.bitrate = 0;
-        RtcEngineEx.SetVideoEncoderConfiguration(config);
-        RtcEngineEx.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+        RtcEngine.SetVideoEncoderConfiguration(config);
+        RtcEngine.SetChannelProfile(CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING);
+        RtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
     }
 
     private void JoinChannel()
     {
-        channelName = channelInputField.text;
-        connection = new RtcConnection
-        {
-            channelId = channelName,
-            localUid = 0 // Let Agora assign a UID
-        };
-
-        ChannelMediaOptions options = new ChannelMediaOptions();
+        Debug.Log("Joining channel: " + channelName);
+        connection = new RtcConnection(channelName, 0);
+        options = new ChannelMediaOptions();
         options.autoSubscribeAudio.SetValue(true);
         options.autoSubscribeVideo.SetValue(true);
         options.publishMicrophoneTrack.SetValue(false);
         options.publishCameraTrack.SetValue(false);
-        RtcEngineEx.JoinChannelEx("", connection, options);
+        options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+        RtcEngine.JoinChannelEx("", connection, options);
         var node = JoinChannelVideo.MakeVideoView(0, channelName);
         LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
     private void LeaveChannel()
     {
-        RtcEngineEx.LeaveChannelEx(connection);
+        RtcEngine.LeaveChannelEx(connection);
     }
 
     private void StartPreview()
     {
-        RtcEngineEx.StartPreview();
+        RtcEngine.StartPreview();
         var node = JoinChannelVideo.MakeVideoView(0, channelName);
         LocalVideoSurface.texture = node.GetComponent<RawImage>().texture;
     }
@@ -126,25 +125,23 @@ public class VideoCallManager : MonoBehaviour
     private void StopPreview()
     {
         JoinChannelVideo.DestroyVideoView(0);
-        RtcEngineEx.StopPreview();
+        RtcEngine.StopPreview();
     }
 
     private void StartPublish()
     {
-        var options = new ChannelMediaOptions();
         options.publishMicrophoneTrack.SetValue(true);
         options.publishCameraTrack.SetValue(true);
         options.clientRoleType.SetValue(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
-        var nRet = RtcEngineEx.UpdateChannelMediaOptions(options);
+        var nRet = RtcEngine.UpdateChannelMediaOptionsEx(options, connection);
         Debug.Log("UpdateChannelMediaOptions: " + nRet);
     }
 
     private void StopPublish()
     {
-        var options = new ChannelMediaOptions();
         options.publishMicrophoneTrack.SetValue(false);
         options.publishCameraTrack.SetValue(false);
-        var nRet = RtcEngineEx.UpdateChannelMediaOptions(options);
+        var nRet = RtcEngine.UpdateChannelMediaOptionsEx(options, connection);
         Debug.Log("UpdateChannelMediaOptions: " + nRet);
     }
     #endregion
